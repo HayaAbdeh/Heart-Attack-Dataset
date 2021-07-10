@@ -1,0 +1,1211 @@
+---
+title: "Heart Disease Prediction"
+author: "Haya Abdeh"
+date: "9th July 2021"
+abstract: "This is the second project for the Harvard Data Science Professional Program  by Prof. of Biostatistics Rafael Irizarry from Harvard University. In this capstone project, we will choose our own data to make analysis and apply machine learning methods."
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Summary 
+\
+As we will choose our own Data set to analyze, we will make a study about the Heart Disease Data set, we will analyze it, visualize it, and apply machine learning methods to make prediction if an individual will have a heart disease or not.
+\
+The data set has been updated about four months ago, and published on kaggle site. the data set can be downloaded from this link https://www.kaggle.com/rashikrahmanpritom/heart-attack-analysis-prediction-dataset
+\
+or from this site
+\
+https://archive.ics.uci.edu/ml/datasets/heart+disease
+\
+we will work with (heart.csv) file, we will explore the date set and all its variables and analyze the relationship between them and apply machine learning methods to make our predictions.
+\
+
+## Introduction 
+\
+Data science is the gate to introduce machine learning as a technique to describe big data and extract knowledge by applying algorithms that analyze and process data into helpful information and naturally intuitive solutions.  
+\
+Machine learning methods have become useful in the development of medicine in terms of improving methods for diagnosing diseases and predicting their occurrence by knowing some important data about individuals.
+\
+In this study, we will explore the Heart Data set and we are going to predict if an individual will develop heart disease or not by applying machine learning algorithms to make our predictions and to compare between each results to find the appropriate technique which make our prediction more accurate.
+\
+We will compute the accuracy of our prediction using these machine learning methods: 
+\
+Logistic Regression 
+\
+Regression and Decision Trees 
+\
+Quadrant Discriminant Analysis (QDA)
+\
+Linear Discriminamt Analaysis (LDA)
+\
+K-Nearest Neighbours Classifier (KNN) 
+\
+Support Vector Machine (SVM)
+\
+Random Forest (RF)
+\
+Gradient Boosting Machine  (GBM)
+\
+
+
+\newpage
+
+Executive Summary
+\
+We start with loading all needed packages and loading the Heart data set (heart.csv) from this link:
+\
+https://www.kaggle.com/rashikrahmanpritom/heart-attack-analysis-prediction-dataset
+\
+Then we will start to explore our data set and analyze it.
+\
+Let us start
+
+
+```{r Install PAckages, echo=FALSE ,message=FALSE , warning=FALSE ,message=FALSE}
+# Install all needed libraries if it is not present
+
+if(!require(tidyverse)) install.packages("tidyverse") 
+if(!require(kableExtra)) install.packages("kableExtra")
+if(!require(tidyr)) install.packages("tidyr")
+if(!require(data.table)) install.packages("data.table")
+if(!require(stringr)) install.packages("stringr")
+if(!require(ggplot2)) install.packages("ggplot2")
+if(!require(plotly)) install.packages("plotly")
+if(!require(gbm)) install.packages("gbm")
+if(!require(dplyr)) install.packages("dplyr")
+if(!require(caret)) install.packages("caret")
+if(!require(xgboost)) install.packages("xgboost")
+if(!require(e1071)) install.packages("e1071")
+if(!require(class)) install.packages("class")
+if(!require(ROCR)) install.packages("ROCR")
+if(!require(randomForest)) install.packages("randomForest")
+if(!require(PRROC)) install.packages("PRROC")
+if(!require(reshape2)) install.packages("reshape2")
+if(!require(lubridate))install.packages("lubridate")
+if(!require(knitr)) install.packages("knitr")
+if(!require(recosystem)) install.packages("recosystem")
+if(!require(tinytex)) install.packages("tinytex")
+if(!require(webshot))install.packages("webshot")
+if(!require(Hmisc))install.packages("Hmisc")
+if(!require(GGally))install.packages("GGally")
+if(!require(rpart.plot))install.packages("rpart.plot")
+
+```
+
+
+```{r Loading packages, echo=TRUE ,message=FALSE, warning=FALSE ,message=FALSE}
+# Loading all needed libraries
+
+library(dplyr)
+library(tidyverse)
+library(kableExtra)
+library(tidyr)
+library(ggplot2)
+library(plotly)
+library(gbm)
+library(caret)
+library(xgboost)
+library(e1071)
+library(class)
+library(lightgbm)
+library(ROCR)
+library(randomForest)
+library(PRROC)
+library(reshape2)
+library(data.table)
+library(lubridate)
+library(knitr)
+library(recosystem)
+library(tinytex)
+library(webshot)
+library(Hmisc)
+library(GGally )
+library(rpart)
+library(rpart.plot)
+
+```
+
+
+
+
+# Exploratory Analysis for Data Set
+
+## Introduce The Dataset 
+
+ First we load the dataset, and show the first 6 rows of it
+
+```{r loading heart.csv file, echo=TRUE , warning=FALSE ,message=FALSE}
+
+
+heart_df <- read.csv('/Users/hammar/Documents/RGitProjects/Heart_attack_proj/heart.csv')
+heart_df %>% head()
+
+
+```
+
+The class of the data set is Data frame
+
+```{r class of dataset, echo=TRUE , warning=FALSE ,message=FALSE}
+class(heart_df)
+
+```
+Now we show the structure of our Heart dataset, so we can see that it has 303 observations and 14 variables.
+
+```{r structure of dataset, echo=TRUE , warning=FALSE ,message=FALSE}
+str(heart_df)
+```
+Let us explain the meaning of the variable's name:\
+
+
+
+1.age : displays age of individual \
+
+2.	sex : Gender of subject: 0 = female 1 = male\
+
+3.	cp : Chest-pain type for individual, with the following formate:\
+0 = typical angina\
+1 = atypical angina\
+2 = non-angina pain\
+3 = asymptomatic angina\
+
+4.	trtbps : Resting blood pressure value of an individual in mm Hg (unit)\
+
+5.	chol : displays Serum cholesterol in mg/dl (unit)\
+
+6.	fbs : Fasting blood sugar of an individual ,level relative to 120 mg/dl: 0 = fasting blood sugar <= 120 mg/dl  And 1 = fasting blood sugar > 120 mg/dl
+\
+
+7.	restecg - Resting ECG: Resting electrocardiographic results\
+0 = normal\
+1 = ST-T wave abnormality\
+2 = left ventricle hyperthrophy\
+
+8. thalachh : Maximum heart rate of an individual\
+
+9.	exng : Exercise Induced Angina,  0 = no 1 = yes\
+
+10. oldpeak : previous peack - ST Depression Induced by Exercise Relative to Rest, value is integer or float\
+
+11. slp - slope - Peak Exercise ST Segment: \
+1 = Up-sloaping\
+2 = flat \
+3 = downsloping\
+
+12.	caa : Number of major vessels (0-3) colored by flourosopy, displays value as integer.\
+
+13.	thall : displays thalassemia : \
+0 = normal \
+1 = silent carrier but normal \
+2 = fixed defect \
+3 = reversable defect\
+
+14.	output : Diagnosis of heart disease which Displays whether the individual is suffering from heart disease or not : \
+0 = absence \
+1 = present.\
+
+
+
+
+
+Let us rename the columns to more meaningful names 
+
+
+```{r changing names, echo=TRUE , warning=FALSE ,message=FALSE}
+
+#defining meanningful names
+
+names <- c("Age",
+           "Sex",
+           "Chest_Pain_Type",
+           "Resting_Blood_Pressure",
+           "Cholesterol_serum",
+           "Fasting_Blood_Sugar",
+           "Resting_ECG",
+           "Maximum_Heart_Rate",
+           "Exercise_Induced_Angina",
+           "ST_Depression_Exercise",
+           "Peak_Exercise_ST_Segment",
+           "Num_Major_Vessels_Flourosopy",
+           "Thalassemia",
+           "Diagnosis_Heart_Disease")
+
+#Lets keep the old names in another data frame
+heart_df_oldnames <- heart_df
+
+#now rename the columns of the dataframe
+
+colnames(heart_df) <- names
+
+#show the new names
+names(heart_df)
+```
+
+
+
+
+Data Visualization
+
+
+```{r show summary, echo=TRUE , warning=FALSE ,message=FALSE}
+
+#LEt us show the Data frame summary
+summary(heart_df)
+
+```
+
+
+
+Let's calculate the distinct values and types for all 14 variables
+
+```{r  distinct values, echo=TRUE , warning=FALSE ,message=FALSE}
+
+
+heart_df %>% 
+summarise(age_ranges = n_distinct(Age), 
+          sex_types = n_distinct(Sex),
+          cp_types = n_distinct(Chest_Pain_Type), 
+          nom_trestbps = n_distinct(Resting_Blood_Pressure),
+          nom_chol = n_distinct(Cholesterol_serum), 
+          nom_fbs = n_distinct(Fasting_Blood_Sugar),
+          types_restecg = n_distinct(Resting_ECG), 
+          nom_thalach = n_distinct(Maximum_Heart_Rate),
+          nom_exang = n_distinct(Exercise_Induced_Angina), 
+          nom_oldpeak = n_distinct(ST_Depression_Exercise),
+          types_slope = n_distinct(Peak_Exercise_ST_Segment),
+          nom_caa = n_distinct(Num_Major_Vessels_Flourosopy),
+          types_thal = n_distinct(Thalassemia),                                         Diagnosis_types = n_distinct(Diagnosis_Heart_Disease))
+
+
+```
+
+
+
+Let us visualize the categorical variables in the Heart Dataset (Sex , Chest_Pain_Type, Fasting_Blood_Sugar ,  Resting_ECG, Exercise_Induced_Angina , Peak_Exercise_ST_Segment , Thalassemia , Diagnosis_Heart_Disease)
+
+
+```{r plots Categorical Variables, echo=TRUE , warning=FALSE ,message=FALSE}
+
+# Histogram for all  Categorical Variables in The Heart Dataset each column individually.
+
+
+heart_df_cat1 <- heart_df %>% 
+  select(Sex , Chest_Pain_Type, Fasting_Blood_Sugar , 
+         Resting_ECG, Exercise_Induced_Angina , 
+         Peak_Exercise_ST_Segment , Thalassemia ,
+         Diagnosis_Heart_Disease)%>% 
+         mutate(Sex = recode_factor(Sex, `0` = "female", `1` = "male" ),
+         Chest_Pain_Type = recode_factor(Chest_Pain_Type,`0` = "typical",   
+                                                         `1` = "atypical",
+                                                         `2` = "non-angina", 
+                                                         `3`="asymptomatic"),
+         Fasting_Blood_Sugar = 
+         recode_factor(Fasting_Blood_Sugar,`0`="<= 120 mg/dl",
+                                           `1`="> 120 mg/dl"),
+          Resting_ECG = recode_factor(Resting_ECG, `0` = "normal",
+                                                   `1` = "ST-T abnormality",
+                                                   `2` = "LV hypertrophy"),
+          Exercise_Induced_Angina = recode_factor(Exercise_Induced_Angina,`0`="no",`1` = "yes"),
+           Peak_Exercise_ST_Segment = recode_factor(Peak_Exercise_ST_Segment,`1`= "up-sloaping", 
+                                       `2` = "flat",
+                                       `3` = "down-sloaping"),
+          Thalassemia = recode_factor(Thalassemia,`0` = "normal",
+                                                  `1` = "silent carrier",
+                                                  `2` = "fixed defect",
+                                                  `3` = "reversible defect"),
+         
+         Diagnosis_Heart_Disease = recode_factor(Diagnosis_Heart_Disease, 
+                                  `0` = "No Disease",`1` = "Have Disease") )
+
+
+
+
+
+
+par(mar=c(1, 1, 1, 1))        
+hist.data.frame(heart_df_cat1)
+
+
+```
+
+
+
+And now visualize the numiric variables in the Heart Dataset (Age,Resting_Blood_Pressure,Cholesterol_serum, Maximum_Heart_Rate,ST_Depression_Exercise,Num_Major_Vessels_Flourosopy)
+
+```{r plots numeric Variables, echo=TRUE , warning=FALSE ,message=FALSE}
+
+# Histogram for all numeric Variables in The Heart Dataset each column individually.
+heart_df_num <- heart_df %>% select(Age,Resting_Blood_Pressure,Cholesterol_serum, 
+        Maximum_Heart_Rate, ST_Depression_Exercise, Num_Major_Vessels_Flourosopy)
+
+hist.data.frame(heart_df_num)
+
+
+
+```
+
+
+When visualizing the previous plots we can have an idea of the high rates of variables may cause a heart disease, may this can give us an idea of the relations between these variables.\
+Highly correlated variables can lead to overly complicated models or wonky predictions. we will find the correlations between the variables after we moved in our analysis.
+
+
+Lets visualize more in our variables.\
+Let us compute each gender, and plot it.
+
+```{r count of gender, echo=TRUE , warning=FALSE ,message=FALSE}
+
+
+heart_df %>% 
+  drop_na() %>%
+  group_by(Sex) %>%
+  count() %>% 
+  ungroup()
+
+```
+
+
+```{r plot of gender, echo=TRUE , warning=FALSE ,message=FALSE}
+
+heart_df_gender <- heart_df %>% 
+    select(Sex)%>% 
+    mutate(Sex = recode_factor(Sex, `0` = "female", `1` = "male" )
+    )
+
+ggplot(heart_df_gender) +
+                   geom_bar(aes(x = Sex ,fill=Sex ) )
+            
+
+```
+
+
+Now let us calculate how many individuals that could be Diagnosed to suffer from heart disease 
+
+```{r  Diagnosis Heart Disease counts, echo=TRUE , warning=FALSE ,message=FALSE}
+
+heart_df %>% 
+  drop_na() %>%
+  group_by(Diagnosis_Heart_Disease) %>%
+  count() %>% 
+  ungroup() 
+
+```
+
+```{r  plot Diagnosis Heart Disease counts, echo=TRUE , warning=FALSE ,message=FALSE}
+
+heart_df_diseased <- heart_df %>% 
+    select(Diagnosis_Heart_Disease)%>% 
+    mutate(Diagnosis_Heart_Disease = recode_factor(Diagnosis_Heart_Disease, `0` = "No Disease", `1` = "Have Disease" )
+    )
+
+ggplot(heart_df_diseased) +
+                   geom_bar(aes(x = Diagnosis_Heart_Disease ,fill=Diagnosis_Heart_Disease ) )
+
+```
+
+As we see the results the total count of having heart disease  (1 = present of disease) is 165 which is higher than not having a heart disease (0 = absence) 138.
+
+
+Now let us show Diagnosis Heart Disease by gender for all types of chest pain
+
+```{r plots Diagnosis Heart Disease by gender, echo=TRUE , warning=FALSE ,message=FALSE}
+
+
+heart_df %>% filter(Diagnosis_Heart_Disease == 1) %>% group_by(Sex, Chest_Pain_Type) %>% summarise(count = n()) %>%
+  ggplot() + geom_bar(aes(Sex, count,   fill = as.factor(Chest_Pain_Type)),stat = "Identity") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, size = 10)) + 
+  ylab("Count") + xlab("Sex") + labs(fill = "Diagnosis_Heart_Disease") + 
+  ggtitle("Sex vs. Count_of_diseased_individuals for various chest pain conditions") +
+  scale_fill_manual(values=c("red", "blue", "darkgreen", "orange"))
+
+```
+
+
+##########################
+Individuals having Thalassemia may have a higher chance of having heart disease , if this is true lets make visualization on this to know. 
+
+Show levels of Thalassemia
+
+```{r levels of Thalassemia, echo=TRUE , warning=FALSE ,message=FALSE}
+
+
+heart_df %>% 
+  drop_na() %>%
+  group_by(Thalassemia) %>%
+  count() %>% 
+  ungroup() 
+
+```
+
+
+```{r plot levels of Thalassemia, echo=TRUE , warning=FALSE ,message=FALSE}
+
+heart_df_Thalassemia <- heart_df %>% 
+    select(Thalassemia)%>% 
+    mutate(Thalassemia =recode_factor(Thalassemia,`0` = "normal",
+                                                  `1` = "silent carrier",
+                                                  `2` = "fixed defect",
+                                                  `3` = "reversible defect"))
+
+ggplot(heart_df_Thalassemia) +
+                   geom_bar(aes(x = Thalassemia ,fill=Thalassemia ) )
+
+```
+
+
+
+Let us show a diagram explains Chest pain type for diseased people with Age classifications
+
+
+
+
+```{r levels of Chest pain, echo=TRUE , warning=FALSE ,message=FALSE}
+heart_df %>% filter(Diagnosis_Heart_Disease == 1) %>% group_by(Age, Chest_Pain_Type) %>% summarise(count = n()) %>%
+  ggplot() + geom_bar(aes(Age, count,   fill = as.factor(Chest_Pain_Type)),stat = "Identity") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, size = 10)) + 
+  ylab("Count") + xlab("Age") + labs(fill = "Diagnosis_Heart_Disease") + 
+  ggtitle("Age vs. Count_of_diseased_individuals) for various chest pain conditions") +
+  scale_fill_manual(values=c("red", "blue", "darkgreen", "orange"))
+
+
+
+```
+ As we mintioned before we have 4 types of Chest pain\
+cp : Chest-pain type for individual, with the following formate:\
+type 0 = typical angina\
+type 1 = atypical angina\
+type 2 = non-angina pain\
+type 3 = asymptomatic angina\
+We can see - Majority of individuals has the type-2 of Chest_Pain (non-angina pain) with ages about (36-75)\
+
+
+
+\newpage
+
+
+Methods of Machine Learning
+
+Variables that are highly correlated could give us correct predictions or incorrect predictions,we are going to start with finding the correlated variables so we can have a high prediction.\
+
+
+
+Let us use function from GGally library which is ggcorr() to make a correlation matrix of the numeric variables, we have two methods to apply, the first one is Pearson which is not that ideal method if the data has too much outliers, the second method is  Kendall, which is more suitable for our data.\
+Let us check both of them.
+
+```{r Correlation matrix Pearson, echo=TRUE , warning=FALSE ,message=FALSE}
+# to use the short names of the data frame, we use the data frame that we initiate previously with shortcut names.
+
+#Correlation matrix using Pearson method, default method is Pearson
+heart_df_oldnames %>% ggcorr(high       = "darkred",
+                             low        = "steelblue",
+                             label      = TRUE, 
+                             hjust      = .75, 
+                             size       = 3, 
+                             label_size = 3,
+                             nbreaks    = 5
+                                              ) +
+  labs(title = "Correlation Matrix",
+  subtitle = "Pearson Method Use Pairwise Obervations")
+
+
+
+```
+
+```{r Correlation matrix Kendall, echo=TRUE , warning=FALSE ,message=FALSE}
+
+#Correlation matrix using Kendall method
+heart_df_oldnames %>% ggcorr(method     = c("pairwise", "kendall"),
+                             high       = "darkred",
+                             low        = "steelblue",
+                             label      = TRUE, 
+                             hjust      = .75, 
+                             size       = 3, 
+                             label_size = 3,
+                             nbreaks    = 5
+                                   ) +
+  labs(title = "Correlation Matrix",
+  subtitle = "Kendall Method Use Pairwise Observations")
+
+```
+
+There are a slight differences between the Pearson and Kendall results, the variables are not highly correlated.
+
+
+\newpage
+
+Machine Learning Basics
+\
+
+We will apply machine learning methods to compute the accuracy of our prediction using these machine learning methods: 
+\
+Logistic Regression 
+\
+Regression and Decision Trees 
+\
+Quadrant Discriminant Analysis (QDA)
+\
+Linear Discriminamt Analaysis (LDA)
+\
+K-Nearest Neighbours Classifier (KNN) 
+\
+Support Vector Machine (SVM)
+\
+Random Forest (RF)
+\
+Gradient Boosting Machine  (GBM)
+\
+
+
+
+Before we start with the algorithms, we will split our dataset to training and test set, to compare our results.\
+
+\
+Training and Test sets, and overall accuracy
+
+```{r Partition the data, echo=TRUE , warning=FALSE ,message=FALSE}
+
+#create Data Partition
+#set seed for reproducible results
+set.seed(1)
+
+test_index <- createDataPartition(y = heart_df$Diagnosis_Heart_Disease, times = 1, p = 0.1, list = FALSE)
+train_heart_df <- heart_df[-test_index, ]
+test_heart_df <- heart_df[test_index, ]
+
+```
+
+After we partition our dataset lets check the dimension of each training and test set
+
+
+```{r dim of train_heart_df , echo=TRUE , warning=FALSE ,message=FALSE}
+#dimension of the training data set
+
+dim(train_heart_df)
+
+```
+
+```{r dim of test_heart_df , echo=TRUE , warning=FALSE ,message=FALSE}
+#dimension of the test data set
+
+dim(test_heart_df)
+
+```
+\newpage
+Applying Methods of Machine Learning\
+
+It is convenient to start working with Logistic regression model since it is relatively easy to implement and yields results that have intuitive meaning. \
+\
+Logistic Regression 
+Logistic regression is a statistical model that in its basic form uses a logistic function to model a binary dependent variable, Mathematically, a binary logistic model has a dependent variable with two possible values, such as pass/fail which is represented by an indicator variable, where the two values are labeled "0" and "1".\
+```{r logistic regression , echo=TRUE , warning=FALSE ,message=FALSE}
+
+#Logistic Regression model
+set.seed(1)
+
+    log_regr_hd_model = glm(Diagnosis_Heart_Disease~., data=train_heart_df, family='binomial')
+    
+ summary(log_regr_hd_model)   
+    
+
+```
+
+Some variables are not significant.
+So let us check the Multi collinearity
+
+```{r Multicollinearity , echo=TRUE , warning=FALSE ,message=FALSE}
+
+cor(train_heart_df)
+
+```
+
+Since it's hard to find which variables are highly correlated. We will see only the variables with correlation > 0.7 or < -0.7
+
+
+```{r correlation > 0.7 or < -0.7 , echo=TRUE , warning=FALSE ,message=FALSE}
+
+abs(cor(train_heart_df))>0.7
+
+```
+As we find the columns which are highly correlated with each other. Let us view the above information as a heatmap.
+
+```{r heatmap for correlations , echo=TRUE , warning=FALSE ,message=FALSE}
+
+m_cor = melt(abs(cor(train_heart_df))>0.7)
+head(m_cor)
+
+
+```
+```{r view heatmap for correlations , echo=TRUE , warning=FALSE ,message=FALSE}
+
+
+ggplot(m_cor, aes(x = Var1, y=Var2, fill=as.numeric(value))) + geom_tile() +
+geom_text(aes(Var1, Var2, label=as.numeric(value)),color='black',size=2)+
+scale_color_gradient(low='blue',high='red') +
+theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1))
+
+
+```
+
+
+The heat map show's that there are no highly correlated variables.\
+So as there is no multi collinearity we will removing Variables based on Significance Level.\
+
+
+```{r logistic regression2 , echo=TRUE , warning=FALSE ,message=FALSE}
+
+
+    log_regr_hd_model2 = glm(Diagnosis_Heart_Disease~ 
+                             Age+ Sex+
+                             Chest_Pain_Type+
+                             Resting_Blood_Pressure +                         
+                             Cholesterol_serum +                             
+                             Fasting_Blood_Sugar +                            
+                             Resting_ECG  +                                 
+                             Maximum_Heart_Rate  +                          
+                             Exercise_Induced_Angina  +                      
+                             ST_Depression_Exercise  +                       
+                             Peak_Exercise_ST_Segment +                      
+                             Num_Major_Vessels_Flourosopy+                   
+                             Thalassemia  ,
+                             data=train_heart_df, family='binomial')
+    
+ summary(log_regr_hd_model2)   
+    
+
+```
+
+
+```{r logistic regression2 min1 , echo=TRUE , warning=FALSE ,message=FALSE}
+
+
+    log_regr_hd_model2 = glm(Diagnosis_Heart_Disease~ 
+                             Age+ Sex+
+                             Chest_Pain_Type+
+                             Resting_Blood_Pressure +                         
+                             Cholesterol_serum +                
+                             Resting_ECG  +                                 
+                             Maximum_Heart_Rate  +                          
+                             Exercise_Induced_Angina  +                      
+                             ST_Depression_Exercise  +                       
+                             Peak_Exercise_ST_Segment +                      
+                             Num_Major_Vessels_Flourosopy+                   
+                             Thalassemia  ,
+                             data=train_heart_df, family='binomial')
+    
+ summary(log_regr_hd_model2)   
+    
+```
+
+
+
+
+```{r logistic regression2 min2 , echo=TRUE , warning=FALSE ,message=FALSE}
+
+
+    log_regr_hd_model2 = glm(Diagnosis_Heart_Disease~ 
+                             Age+ Sex+
+                             Chest_Pain_Type+
+                             Resting_Blood_Pressure +                         
+                             Cholesterol_serum +                           
+                             Resting_ECG  +                      
+                             Exercise_Induced_Angina  +                      
+                             ST_Depression_Exercise  +                       
+                             Peak_Exercise_ST_Segment +                      
+                             Num_Major_Vessels_Flourosopy+                   
+                             Thalassemia  ,
+                             data=train_heart_df, family='binomial')
+    
+ summary(log_regr_hd_model2)   
+    
+```
+
+
+
+
+```{r logistic regression2 min3 , echo=TRUE , warning=FALSE ,message=FALSE}
+
+
+    log_regr_hd_model2 = glm(Diagnosis_Heart_Disease~ 
+                             Age+ Sex+
+                             Chest_Pain_Type+
+                             Resting_Blood_Pressure +  
+                             Resting_ECG  +              
+                             Exercise_Induced_Angina  +                      
+                             ST_Depression_Exercise  +                       
+                             Peak_Exercise_ST_Segment +                      
+                             Num_Major_Vessels_Flourosopy+                   
+                             Thalassemia  ,
+                             data=train_heart_df, family='binomial')
+    
+ summary(log_regr_hd_model2)   
+    
+```
+
+
+
+```{r logistic regression2 min4 , echo=TRUE , warning=FALSE ,message=FALSE}
+
+
+    log_regr_hd_model2 = glm(Diagnosis_Heart_Disease~ 
+                             Sex+
+                             Chest_Pain_Type+
+                             Resting_Blood_Pressure +    
+                             Resting_ECG  +                
+                             Exercise_Induced_Angina  +                      
+                             ST_Depression_Exercise  +                       
+                             Peak_Exercise_ST_Segment +                      
+                             Num_Major_Vessels_Flourosopy+                   
+                             Thalassemia  ,
+                             data=train_heart_df, family='binomial')
+    
+ summary(log_regr_hd_model2)   
+    
+```
+
+All the variables are significant in the last model.\
+
+Let us Make Predictions\
+
+```{r Make Predictions , echo=TRUE , warning=FALSE ,message=FALSE}
+#Predictions on The Training Set
+
+predictTrain_set = predict(log_regr_hd_model2, type='response')
+
+```
+
+```{r Confusion matrix  of training set, echo=TRUE , warning=FALSE ,message=FALSE}
+#Confusion matrix using threshold of 0.5
+table(train_heart_df$Diagnosis_Heart_Disease, predictTrain_set>0.5)
+
+```
+
+Let's compute accuracy.
+
+Accuracy is one metric for evaluating classification models, it is the fraction of predictions our model got right.
+
+```{r Accuracy on training set , echo=TRUE , warning=FALSE ,message=FALSE}
+#Accuracy on The training set
+accuracy_LR_train <- (97+137)/nrow(train_heart_df)
+
+accuracy_LR_train
+```
+
+
+```{r Predictions on Test set , echo=TRUE , warning=FALSE ,message=FALSE}
+#Predictions on Test set
+predictTest_set = predict(log_regr_hd_model2, newdata=test_heart_df , type='response')
+
+```
+
+```{r Confusion matrix of test set , echo=TRUE , warning=FALSE ,message=FALSE}
+
+#Confusion matrix using threshold of 0.5
+table(test_heart_df$Diagnosis_Heart_Disease, predictTest_set>0.5)
+
+```
+
+
+
+```{r Accuracy on test set , echo=TRUE , warning=FALSE ,message=FALSE}
+#Accuracy on The test set
+accuracy_LR_test <- (8+15)/nrow(test_heart_df)
+
+accuracy_LR_test
+```
+
+Plotting ROCR curve
+
+ROC curve (receiver operating characteristic curve) is a graph showing the performance of a classification model at all classification thresholds. This curve plots two parameters:
+
+1. True Positive Rate
+2. False Positive Rate
+
+An ROC curve plots TPR vs. FPR at different classification thresholds. Lowering the classification threshold classifies more items as positive, thus increasing both False Positives and True Positives.
+
+
+
+```{r ROCR curve , echo=TRUE , warning=FALSE ,message=FALSE}
+
+ROCRpred = prediction(predictTest_set, test_heart_df$Diagnosis_Heart_Disease)
+
+#The area under curve
+area = as.numeric(performance(ROCRpred, 'auc')@y.values)
+area
+
+
+```
+So we can see the value of The Area under the curve 
+
+
+Let us show the curve 
+
+```{r ROCR curve show , echo=TRUE , warning=FALSE ,message=FALSE}
+
+ROCRperf = performance(ROCRpred, 'tpr','fpr')
+plot(ROCRperf, colorize=TRUE, main='ROCR Curve')
+
+```
+
+From The curve it seems that true positives are maximized such that maximum number of patients with heart disease are not identified as healthy
+
+
+
+
+
+```{r result table for LR train, echo=TRUE , warning=FALSE ,message=FALSE}
+# We make a data frame to save the results of accuracy
+results_table <- data.frame(Methods="Logistic Regression Model", Accuracy_of_Train_Sets=accuracy_LR_train ,Accuracy_of_Test_Sets = accuracy_LR_test )
+
+#results_table
+
+```
+
+\newpage
+
+Regression Trees\
+
+A tree is basically a flow chart of yes or no questions. The general idea of the methods we are describing is to define an algorithm that uses data to create these trees with predictions at the ends, referred to as nodes.\
+The general idea is to define an algorithm that uses data to create trees, Regression trees operate by predicting an outcome variable by partitioning the predictors.\
+A doctor may can decide if a person at risk of having a heart attack by using a decision tree such as the one that we are going to build.
+
+
+
+```{r Regression and Decision Trees  , echo=TRUE , warning=FALSE ,message=FALSE}
+
+#initiate our tree
+
+tree = rpart(Diagnosis_Heart_Disease ~ ., data=train_heart_df, method='class')
+
+
+```
+
+
+
+Let us show the tree that we build using prp function
+
+```{r tree graph , echo=TRUE , warning=FALSE ,message=FALSE}
+# show tree graph
+prp(tree)
+
+```
+
+```{r predict_tree, echo=TRUE , warning=FALSE ,message=FALSE}
+#predict_tree for train set
+predict_tree_train = predict(tree, newdata=train_heart_df, type='class')
+#predict_tree for test set
+predict_tree = predict(tree, newdata=test_heart_df, type='class')
+
+```
+
+
+
+```{r confusion matrix train, echo=TRUE , warning=FALSE ,message=FALSE}
+#confusion matrix for Trian set 
+table(train_heart_df$Diagnosis_Heart_Disease, predict_tree_train)
+
+
+```
+```{r confusion matrix test, echo=TRUE , warning=FALSE ,message=FALSE}
+
+#confusion matrix for Test set 
+table(test_heart_df$Diagnosis_Heart_Disease, predict_tree)
+
+```
+
+
+
+```{r Accuracy predict_tree, echo=TRUE , warning=FALSE ,message=FALSE}
+
+#Accuracy for train set
+accuracy_train_tree <- (102+133)/nrow(train_heart_df)
+#Accuracy for test set
+accuracy_test_tree <- (7+13)/nrow(test_heart_df)
+
+
+accuracy_train_tree 
+accuracy_test_tree
+
+results_table <- results_table %>% add_row(Methods="Regression Tree Model", Accuracy_of_Train_Sets=accuracy_train_tree ,Accuracy_of_Test_Sets = accuracy_test_tree)
+
+#results_table
+```
+
+```{r  predict_tree no class, echo=TRUE , warning=FALSE ,message=FALSE}
+predict_tree = predict(tree, newdata=test_heart_df)
+
+
+```
+
+
+```{r  ROCRtree test, echo=TRUE , warning=FALSE ,message=FALSE}
+
+ROCR_tree_test = prediction(predict_tree[,2],test_heart_df$Diagnosis_Heart_Disease)
+
+```
+
+
+
+```{r  ROCR_tree test, echo=TRUE , warning=FALSE ,message=FALSE}
+
+
+ROCRperf = performance(ROCR_tree_test, 'tpr','fpr')
+plot(ROCRperf,colorize=TRUE)
+
+```
+
+```{r  performance value, echo=TRUE , warning=FALSE ,message=FALSE}
+as.numeric(performance(ROCR_tree_test, 'auc')@y.values)
+
+```
+
+The area under the curve for the regression tree is less than the logistic regression, which mean more items would be as positive, thus increasing both False Positives and True Positives in the logistic regression model.
+
+
+
+
+
+\newpage
+
+Quadratic Discriminant Analysis (QDA) \
+QDA is a version of Naive Bayes in which we assume that the conditional probabilities for the predictors are multivariate normal. \
+the QDA method can work well with a few predictors.\
+
+Before start our analysis we should convert our variables to factors.
+
+```{r convert variables to factors , echo=TRUE , warning=FALSE ,message=FALSE}
+# Converting the dependent variables to factors
+train_heart_df$Diagnosis_Heart_Disease <- as.factor(train_heart_df$Diagnosis_Heart_Disease)
+test_heart_df$Diagnosis_Heart_Disease <- as.factor(test_heart_df$Diagnosis_Heart_Disease)
+```
+
+
+```{r QDA analysis , echo=TRUE , warning=FALSE ,message=FALSE}
+
+qda_fit <- train( Diagnosis_Heart_Disease ~ ., method = "qda", data = train_heart_df)
+
+qda_predict <- predict(qda_fit, test_heart_df)
+confusionMatrix(qda_predict, test_heart_df$Diagnosis_Heart_Disease)
+
+```
+
+```{r QDA result , echo=TRUE , warning=FALSE ,message=FALSE}
+
+#Accuracy from the previous result
+results_table <- results_table %>% add_row(Methods="QDA", Accuracy_of_Train_Sets= 0.8065 ,Accuracy_of_Test_Sets = 0.8065)
+
+#results_table
+
+
+```
+
+
+
+Linear Discriminant Analysis (LDA) \
+With assumption that all predictors share the same standard deviations and correlations, the boundary will be a line.\
+Let's start LDA
+
+```{r LDA analysis , echo=TRUE , warning=FALSE ,message=FALSE}
+lda_fit <- train(Diagnosis_Heart_Disease ~ ., method = "lda", data = train_heart_df)
+
+lda_predict <- predict(lda_fit, test_heart_df)
+confusionMatrix(lda_predict, test_heart_df$Diagnosis_Heart_Disease)
+
+```
+```{r LDA result , echo=TRUE , warning=FALSE ,message=FALSE}
+
+#Accuracy from the previous result
+results_table <- results_table %>% add_row(Methods="LDA", Accuracy_of_Train_Sets= 0.9032 ,Accuracy_of_Test_Sets = 0.9032)
+
+#results_table
+
+```
+
+
+KNN Classifier\
+K-nearest neighbors (KNN) estimates the conditional probabilities in a similar way to bin smoothing. However, KNN is easier to adapt to multiple dimensions.
+
+
+```{r Knn analysis , echo=TRUE , warning=FALSE ,message=FALSE}
+ctrl <- trainControl(method = "cv", verboseIter = FALSE, number = 5)
+knn_fit <- train(Diagnosis_Heart_Disease ~ ., 
+                data = train_heart_df, method = "knn", preProcess = c("center","scale"),
+                trControl = ctrl , tuneGrid = expand.grid(k = seq(1, 20, 2)))
+
+plot(knn_fit)
+
+
+knn_predict <- predict(knn_fit,newdata = test_heart_df )
+knn_results <- confusionMatrix(knn_predict, test_heart_df$Diagnosis_Heart_Disease )
+
+knn_results
+
+```
+
+```{r KNN result , echo=TRUE , warning=FALSE ,message=FALSE}
+
+#Accuracy from the previous result
+results_table <- results_table %>% add_row(Methods="KNN", Accuracy_of_Train_Sets= 0.8387  ,Accuracy_of_Test_Sets = 0.8387 )
+
+#results_table
+
+```
+
+
+Support Vector Machine (SVM)\
+SVM is a supervised machine learning algorithm which can be used for both classification or regression challenges. However,  it is mostly used in classification problems.\
+Support Vectors are simply the co-ordinates of individual observation. The SVM classifier is a frontier which best segregates the two classes (hyper-plane/ line).
+
+
+```{r the svm  , echo=TRUE , warning=FALSE ,message=FALSE}
+
+ctrl <- trainControl(method = "cv", verboseIter = FALSE, number = 5)
+
+grid_svm <- expand.grid(C = c(0.01, 0.1, 1, 10, 20))
+
+svm_fit <- train(Diagnosis_Heart_Disease ~ ., data = train_heart_df, method = "svmLinear", preProcess = c("center","scale"), tuneGrid = grid_svm, trControl = ctrl)
+
+plot(svm_fit)
+
+svm_predict <- predict(svm_fit, newdata = test_heart_df)
+svm_results <- confusionMatrix(svm_predict, test_heart_df$Diagnosis_Heart_Disease)
+
+svm_results
+
+```
+
+```{r SVM result , echo=TRUE , warning=FALSE ,message=FALSE}
+
+#Accuracy from the previous result
+results_table <- results_table %>% add_row(Methods="SVM", Accuracy_of_Train_Sets= 0.8387  ,Accuracy_of_Test_Sets = 0.8387 )
+
+#results_table
+
+```
+
+
+Random Forest\
+
+Random forests are a very popular approach that address the shortcomings of decision trees using a clever idea.\
+The goal is to improve prediction performance and reduce instability by averaging multiple decision trees, a forest of trees constructed with randomness.
+
+
+```{r the random forest  , echo=TRUE , warning=FALSE ,message=FALSE}
+
+control<- trainControl(method = "cv", number = 5, verboseIter = FALSE)
+grid <-data.frame(mtry = seq(1, 10, 2))
+rf_fit <- train(Diagnosis_Heart_Disease ~ ., method = "rf", data = train_heart_df, ntree = 20, trControl = control,
+                  tuneGrid = grid)
+
+plot(rf_fit)
+rf_predict <- predict(rf_fit, newdata = test_heart_df)
+
+rf_results <- confusionMatrix(rf_predict, test_heart_df$Diagnosis_Heart_Disease)
+
+rf_results
+
+
+```
+
+```{r RF result , echo=TRUE , warning=FALSE ,message=FALSE}
+
+#Accuracy from the previous result
+results_table <- results_table %>% add_row(Methods="RF", Accuracy_of_Train_Sets= 0.8387  ,Accuracy_of_Test_Sets = 0.8387 )
+
+#results_table
+
+```
+
+
+Gradient Boosting Machine (GBM)\
+GBM constructs a forward stage-wise additive model by implementing gradient descent in function space.\
+GBM build an ensemble of shallow and weak successive trees. \
+
+```{r the gbm  , echo=TRUE , warning=FALSE ,message=FALSE}
+
+gbmGrid <-  expand.grid(interaction.depth = c(1, 5, 10, 25, 30),n.trees = c(5, 10, 25, 50), shrinkage = c(0.1, 0.2, 0.3,  0.4, 0.5), n.minobsinnode = 20)
+
+gbm_fit <- train(Diagnosis_Heart_Disease ~ ., method = "gbm", data = train_heart_df,  trControl = control, verbose = FALSE,tuneGrid = gbmGrid)
+
+plot(gbm_fit)
+
+gbm_predict <- predict(gbm_fit, newdata = test_heart_df)
+
+gbm_results <- confusionMatrix(gbm_predict, test_heart_df$Diagnosis_Heart_Disease)
+
+gbm_results
+
+
+```
+
+
+```{r GBM result , echo=TRUE , warning=FALSE ,message=FALSE}
+
+#Accuracy from the previous result
+results_table <- results_table %>% add_row(Methods="GBM", Accuracy_of_Train_Sets= 0.8065  ,Accuracy_of_Test_Sets = 0.8065 )
+
+#results_table
+
+```
+
+Results of the accuracy of the predictions\
+
+As we see the resulting table which shows the overall accuracy for each model we build, the model that gives us the higher accuracy is LDA model. 
+```{r print final result table , echo=TRUE , warning=FALSE ,message=FALSE}
+#Print the final results table
+results_table
+```
+
+Conclusion \
+
+We can see that the LDA model gives us a good accuracy result 0.9032000 , it seems that LDA worked for this data set.\
+The other models gives us a good accuracy results approximately  0.80  \
+We can’t all be cardiologists but the models that we build is a very good methods to predict if individual would have a heart disease or not, this would improve the methods of predictions and diagnosing diseases in future.\
+
+Future Work\
+As a future plans more machine learning models would be built to find if we can get a higher rate of accuracy, also ensemble method should be considered to apply on such Data set, to combine the advantages of various models and enhance the overall performance of prediction. \
+
+ 
+References:\
+
+https://wanjirumaggie45.medium.com/data-science-for-good-machine-learning-for-heart-disease-prediction-289234651fed
+
+https://archive.ics.uci.edu/ml/datasets/heart+disease
+
+https://www.kaggle.com/rashikrahmanpritom/heart-attack-analysis-prediction-dataset
+
+https://www.kaggle.com/tentotheminus9/what-causes-heart-disease-explaining-the-model
+
+https://towardsdatascience.com/heart-disease-uci-diagnosis-prediction-b1943ee835a7
+
+https://www.kaggle.com/ronitf/heart-disease-uci
+
+https://www.r-bloggers.com/2019/09/heart-disease-prediction-from-patient-data-in-r/
+
+https://www.kaggle.com/snogard/heart-disease-uci-using-r
+
+https://www.kaggle.com/faressayah/predicting-heart-disease-using-machine-learning
+
+https://towardsdatascience.com/heart-disease-prediction-73468d630cfc
+
+https://towardsdatascience.com/predicting-presence-of-heart-diseases-using-machine-learning-36f00f3edb2c
+
+https://towardsdatascience.com/boosting-algorithm-gbm-97737c63daa3
+
+https://developers.google.com/machine-learning/crash-course/classification/roc-and-auc
+
+https://en.wikipedia.org/wiki/Logistic_regression
+
+https://www.analyticsvidhya.com/blog/2017/09/understaing-support-vector-machine-example-code/
+
+https://rpubs.com/phamdinhkhanh/389752
+
+http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/
+
+https://ggplot2.tidyverse.org/reference/scale_manual.html
+
+
